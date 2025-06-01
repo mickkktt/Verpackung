@@ -1,0 +1,329 @@
+import React, { useState } from 'react';
+import { Camera, Package, Info, CheckCircle, AlertCircle, Scan, X } from 'lucide-react';
+
+// Statische Produktdatenbank - Hier sind Ihre Produkte gespeichert
+const products = {
+  "1234567890123": {
+    name: "Schoko-Riegel Premium",
+    sku: "SR-001",
+    barcode: "1234567890123",
+    kartonTyp: "Karton A (Klein)",
+    kartonGroesse: "20x15x10 cm",
+    maxAnzahl: "24",
+    gewicht: "50g",
+    kategorie: "Süßwaren",
+    lagerplatz: "Regal B-12",
+    verpackungshinweise: "Vorsichtig stapeln, max. 5 Kartons übereinander",
+    priority: "normal",
+    bildUrl: "https://example.com/schoko-riegel.jpg"
+  },
+  "9876543210987": {
+    name: "Bio-Kekse Vollkorn",
+    sku: "BK-002",
+    barcode: "9876543210987",
+    kartonTyp: "Karton B (Mittel)",
+    kartonGroesse: "30x20x15 cm",
+    maxAnzahl: "12",
+    gewicht: "200g",
+    kategorie: "Bio-Produkte",
+    lagerplatz: "Regal A-05",
+    verpackungshinweise: "Trocken lagern, vor Feuchtigkeit schützen",
+    priority: "hoch",
+    bildUrl: ""
+  },
+  "1111111111111": {
+    name: "Mineral Wasser Sprudel",
+    sku: "MW-003",
+    barcode: "1111111111111",
+    kartonTyp: "Karton C (Groß)",
+    kartonGroesse: "40x30x25 cm",
+    maxAnzahl: "6",
+    gewicht: "1.5L",
+    kategorie: "Getränke",
+    lagerplatz: "Regal C-08",
+    verpackungshinweise: "Schwer - mit Vorsicht transportieren",
+    priority: "normal",
+    bildUrl: ""
+  },
+  "2222222222222": {
+    name: "Premium Kaffee Bohnen",
+    sku: "KB-004",
+    barcode: "2222222222222",
+    kartonTyp: "Karton A (Klein)",
+    kartonGroesse: "25x20x15 cm",
+    maxAnzahl: "10",
+    gewicht: "500g",
+    kategorie: "Kaffee & Tee",
+    lagerplatz: "Regal D-15",
+    verpackungshinweise: "Aromaversiegelt - nicht drücken",
+    priority: "hoch",
+    bildUrl: ""
+  },
+  "3333333333333": {
+    name: "Handcreme Aloe Vera",
+    sku: "HC-005",
+    barcode: "3333333333333",
+    kartonTyp: "Karton A (Klein)",
+    kartonGroesse: "20x15x10 cm",
+    maxAnzahl: "20",
+    gewicht: "75ml",
+    kategorie: "Kosmetik",
+    lagerplatz: "Regal E-03",
+    verpackungshinweise: "Vor Hitze schützen",
+    priority: "niedrig",
+    bildUrl: ""
+  }
+};
+
+const BarcodePackagingApp = () => {
+  const [scannedCode, setScannedCode] = useState('');
+  const [productInfo, setProductInfo] = useState(null);
+  const [isScanning, setIsScanning] = useState(false);
+  const [scanHistory, setScanHistory] = useState([]);
+
+  // Barcode-Scanner Simulation
+  const simulateBarcodeInput = (code) => {
+    setScannedCode(code);
+    const product = products[code];
+    
+    if (product) {
+      setProductInfo(product);
+      setScanHistory(prev => [{
+        code,
+        product: product.name,
+        timestamp: new Date().toLocaleTimeString('de-DE'),
+        status: 'gefunden'
+      }, ...prev.slice(0, 4)]);
+    } else {
+      setProductInfo(null);
+      setScanHistory(prev => [{
+        code,
+        product: 'Unbekanntes Produkt',
+        timestamp: new Date().toLocaleTimeString('de-DE'),
+        status: 'nicht gefunden'
+      }, ...prev.slice(0, 4)]);
+    }
+  };
+
+  const startScanning = () => {
+    setIsScanning(true);
+    setTimeout(() => {
+      setIsScanning(false);
+    }, 2000);
+  };
+
+  const getPriorityColor = (priority) => {
+    switch (priority) {
+      case 'hoch': return 'text-red-600 bg-red-50';
+      case 'normal': return 'text-blue-600 bg-blue-50';
+      case 'niedrig': return 'text-green-600 bg-green-50';
+      default: return 'text-gray-600 bg-gray-50';
+    }
+  };
+
+  const clearScannedCode = () => {
+    setScannedCode('');
+    setProductInfo(null);
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50 p-4">
+      <div className="max-w-md mx-auto bg-white rounded-lg shadow-lg">
+        {/* Header */}
+        <div className="bg-blue-600 text-white p-4 rounded-t-lg">
+          <div className="flex items-center gap-2">
+            <Package className="w-6 h-6" />
+            <h1 className="text-xl font-bold">Verpackungs-Scanner</h1>
+          </div>
+          <p className="text-blue-100 text-sm mt-1">
+            {Object.keys(products).length} Produkte verfügbar
+          </p>
+        </div>
+
+        {/* Scanner Bereich */}
+        <div className="p-4">
+          <div className="bg-gray-100 rounded-lg p-6 text-center mb-4">
+            {isScanning ? (
+              <div className="animate-pulse">
+                <Scan className="w-16 h-16 mx-auto text-blue-600 mb-2" />
+                <p className="text-gray-600">Scanning...</p>
+              </div>
+            ) : (
+              <div>
+                <Camera className="w-16 h-16 mx-auto text-gray-400 mb-2" />
+                <button
+                  onClick={startScanning}
+                  className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Barcode scannen
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Manuelle Eingabe */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Oder Barcode manuell eingeben:
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={scannedCode}
+                onChange={(e) => setScannedCode(e.target.value)}
+                placeholder="Barcode eingeben..."
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+              <button
+                onClick={() => simulateBarcodeInput(scannedCode)}
+                className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+              >
+                Suchen
+              </button>
+              {scannedCode && (
+                <button
+                  onClick={clearScannedCode}
+                  className="bg-gray-500 text-white px-3 py-2 rounded-lg hover:bg-gray-600 transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Verfügbare Produkte - Schnellzugriff */}
+          <div className="mb-4">
+            <p className="text-sm text-gray-600 mb-2">Schnellzugriff - Verfügbare Produkte:</p>
+            <div className="grid grid-cols-2 gap-2">
+              {Object.entries(products).slice(0, 6).map(([barcode, product]) => (
+                <button
+                  key={barcode}
+                  onClick={() => simulateBarcodeInput(barcode)}
+                  className="text-left p-2 bg-gray-50 rounded border hover:bg-blue-50 hover:border-blue-300 transition-colors"
+                >
+                  <p className="text-sm font-medium truncate">{product.name}</p>
+                  <p className="text-xs text-gray-500">{barcode}</p>
+                </button>
+              ))}
+            </div>
+            {Object.keys(products).length > 6 && (
+              <p className="text-xs text-gray-500 mt-2 text-center">
+                +{Object.keys(products).length - 6} weitere Produkte verfügbar
+              </p>
+            )}
+          </div>
+
+          {/* Produktinformationen */}
+          {scannedCode && (
+            <div className="border rounded-lg p-4 mb-4">
+              {productInfo ? (
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <CheckCircle className="w-5 h-5 text-green-600" />
+                    <h3 className="font-semibold text-green-800">Produkt gefunden</h3>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    {/* Produktname und Bild */}
+                    <div className="flex gap-3">
+                      {productInfo.bildUrl && (
+                        <img 
+                          src={productInfo.bildUrl} 
+                          alt={productInfo.name}
+                          className="w-16 h-16 object-cover rounded border"
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                          }}
+                        />
+                      )}
+                      <div className="flex-1">
+                        <h4 className="font-medium text-gray-900">{productInfo.name}</h4>
+                        {productInfo.sku && <p className="text-sm text-gray-600">SKU: {productInfo.sku}</p>}
+                        <p className="text-xs text-gray-500">Barcode: {productInfo.barcode}</p>
+                      </div>
+                    </div>
+
+                    {/* Verpackungsinformationen */}
+                    {(productInfo.kartonTyp || productInfo.kartonGroesse || productInfo.maxAnzahl) && (
+                      <div className="bg-blue-50 p-3 rounded-lg">
+                        <h5 className="font-medium text-blue-900 mb-2">📦 Verpackungsinformationen</h5>
+                        <div className="space-y-1 text-sm">
+                          {productInfo.kartonTyp && <p><strong>Karton:</strong> {productInfo.kartonTyp}</p>}
+                          {productInfo.kartonGroesse && <p><strong>Größe:</strong> {productInfo.kartonGroesse}</p>}
+                          {productInfo.maxAnzahl && <p><strong>Max. Anzahl:</strong> {productInfo.maxAnzahl} Stück</p>}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Weitere Details */}
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div>
+                        {productInfo.gewicht && <p><strong>Gewicht:</strong> {productInfo.gewicht}</p>}
+                        {productInfo.kategorie && <p><strong>Kategorie:</strong> {productInfo.kategorie}</p>}
+                      </div>
+                      <div>
+                        {productInfo.lagerplatz && <p><strong>Lagerplatz:</strong> {productInfo.lagerplatz}</p>}
+                        <div className={`inline-block px-2 py-1 rounded text-xs font-medium ${getPriorityColor(productInfo.priority)}`}>
+                          Priorität: {productInfo.priority}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Verpackungshinweise */}
+                    {productInfo.verpackungshinweise && (
+                      <div className="bg-yellow-50 p-3 rounded-lg">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Info className="w-4 h-4 text-yellow-600" />
+                          <span className="font-medium text-yellow-800">Wichtige Hinweise</span>
+                        </div>
+                        <p className="text-sm text-yellow-700">{productInfo.verpackungshinweise}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <AlertCircle className="w-5 h-5 text-red-600" />
+                    <h3 className="font-semibold text-red-800">Produkt nicht gefunden</h3>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    Barcode: {scannedCode}
+                  </p>
+                  <p className="text-sm text-red-600 mt-1">
+                    Dieser Barcode ist nicht in der Datenbank vorhanden.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Scan-Historie */}
+          {scanHistory.length > 0 && (
+            <div className="border-t pt-4">
+              <h3 className="font-medium text-gray-900 mb-3">Letzte Scans</h3>
+              <div className="space-y-2">
+                {scanHistory.map((entry, index) => (
+                  <div key={index} className="flex justify-between items-center p-2 bg-gray-50 rounded text-sm">
+                    <div>
+                      <p className="font-medium">{entry.product}</p>
+                      <p className="text-gray-500">{entry.code}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-gray-500">{entry.timestamp}</p>
+                      <span className={`inline-block w-2 h-2 rounded-full ${
+                        entry.status === 'gefunden' ? 'bg-green-500' : 'bg-red-500'
+                      }`}></span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default BarcodePackagingApp;
